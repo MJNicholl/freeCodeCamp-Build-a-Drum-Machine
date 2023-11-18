@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- using babel to transpile the script
+    because the JSX part of the script is not supported by default in some browsers
+    and it throws an error saying " Uncaught SyntaxError: Unexpected token < " -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script> 
+
+    <!-- using react cdn, the first one is the core react library -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <!-- this second one is the DOM library to render react components into the DOM -->
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+</head>
+<body>
+
+    <div id="app"></div>
+
+    
+    
+    <script type="text/babel">
+
+        const possibleInputs = {
+            "q": "Heater 1",
+            "w": "Heater 2",
+            "e": "Heater 3",
+            "a": "Heater 4",
+            "s": "Clap",
+            "d": "Open-HH",
+            "z": "Kick-n-Hat",
+            "x": "Kick",
+            "c": "Close-HH"
+        };
+        const expectedKeys = Object.keys(possibleInputs);
+        const appElement = document.getElementById("app");
+        const root = ReactDOM.createRoot(appElement);
+        let panelText;
+
+
+        class DrumPadKey extends React.Component
+        {
+            constructor(props)
+            {
+                super(props);
+
+                this.state = {
+                    id: this.props.id,
+                    keypress: this.props.keypress,
+                    title: this.props.title,
+                    source: this.props.source
+                }
+
+                this.componentDidMount = this.componentDidMount.bind(this);
+                this.PlayAudio = this.PlayAudio.bind(this);
+                this.OnScreenKeypadClicked = this.OnScreenKeypadClicked.bind(this);
+            }
+
+
+            componentDidMount()
+            {
+                window.addEventListener("keypress", (event) => {
+                    if(event.key.toUpperCase() == this.state.keypress.toUpperCase())
+                    {
+                        this.PlayAudio(event.key);
+                    }
+                });
+            }
+
+
+            PlayAudio(keyPressed)
+            {
+                if(panelText == null)
+                {
+                    panelText = document.getElementById("display");
+                }
+                if(panelText != null)
+                {
+                    panelText.textContent = possibleInputs[keyPressed];
+                }
+
+                this.GetCurrentAudioElement(keyPressed).play();
+            }
+
+
+            OnScreenKeypadClicked()
+            {
+                let pressedKey = event.target.id;
+
+                if(pressedKey != "display" && expectedKeys.includes(pressedKey.toLowerCase()))
+                {
+                    this.PlayAudio(pressedKey);
+                }
+            }
+
+
+            GetCurrentAudioElement(currentInput)
+            {
+                const audioElements = document.getElementsByClassName("clip");
+                const audioObjectValues = Object.values(audioElements);
+                let currentAudioElement = audioObjectValues.filter(item => item.id.toLocaleUpperCase() == currentInput.toUpperCase());
+                currentAudioElement = currentAudioElement[0];
+
+                return currentAudioElement;
+            }
+
+
+            render()
+            {
+                return (
+                    <div className="drum-pad" id={this.state.id.toLowerCase()} onClick={this.OnScreenKeypadClicked.bind(this)}>
+                        <audio id={this.state.id.toUpperCase()} src={this.state.source} className="clip"></audio>
+                        {this.state.id.toUpperCase()}
+                    </div>
+                )
+            }
+        }
+
+        class App extends React.Component
+        {
+            render()
+            {
+                return (
+                <div id="drum-machine">
+                    {expectedKeys.map(item => <DrumPadKey id={item} keypress={item} title={possibleInputs[item]} source={"./audio/" + possibleInputs[item] + ".mp3"}/>)}
+                    <div id="display">display</div>
+                </div>);
+            }
+        }
+
+        root.render(React.createElement(App), appElement);
+
+    </script> 
+
+    <script src="https://cdn.freecodecamp.org/testable-projects-fcc/v1/bundle.js"></script>
+</body>
+</html>
